@@ -9,6 +9,7 @@ use Magento\Store\Model\ScopeInterface;
 class Config extends AbstractHelper
 {
     private const XML_PATH_ENABLED = 'panth_orderattachments/general/enabled';
+    private const XML_PATH_ENABLE_ALL_PRODUCTS = 'panth_orderattachments/general/enable_all_products';
     private const XML_PATH_ALLOWED_EXTENSIONS = 'panth_orderattachments/upload/allowed_extensions';
     private const XML_PATH_MAX_FILE_SIZE = 'panth_orderattachments/upload/max_file_size';
     private const XML_PATH_MAX_FILES_PER_ITEM = 'panth_orderattachments/upload/max_files_per_item';
@@ -20,6 +21,15 @@ class Config extends AbstractHelper
     {
         return $this->scopeConfig->isSetFlag(
             self::XML_PATH_ENABLED,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function isEnabledForAllProducts(int|string|null $storeId = null): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            self::XML_PATH_ENABLE_ALL_PRODUCTS,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );

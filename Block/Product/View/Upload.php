@@ -39,7 +39,13 @@ class Upload extends Template
             return false;
         }
 
-        return (bool) $product->getData('panth_allow_order_attachment');
+        $allowAttachment = $product->getData('panth_allow_order_attachment');
+
+        if ($this->config->isEnabledForAllProducts()) {
+            return $allowAttachment === null || (bool) $allowAttachment;
+        }
+
+        return (bool) $allowAttachment;
     }
 
     public function getProduct()

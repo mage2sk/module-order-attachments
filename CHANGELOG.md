@@ -4,6 +4,14 @@ All notable changes to this extension are documented here. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.9] - Admin download route fix, enable-all-products toggle
+
+### Fixed
+- The admin order-view Download button built its URL with the frontend route id (`orderattachments/...`), which is not registered on the admin router, so every download returned the admin 404 page. It now uses the registered admin route id (`panth_orderattachments/...`).
+
+### Added
+- "Enable for all products unless disabled per product" toggle (default off, preserving current behavior). When enabled, products whose `panth_allow_order_attachment` attribute is unset show the upload widget and only an explicit "No" hides it; applied to both the product-page block and the server-side upload validation.
+
 ## [1.0.8]
 
 ### Changed

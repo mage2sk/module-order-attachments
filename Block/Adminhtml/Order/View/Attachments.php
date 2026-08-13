@@ -50,7 +50,7 @@ class Attachments extends Template
 
     public function getDownloadUrl(int $attachmentId): string
     {
-        return $this->getUrl('orderattachments/attachment/download', [
+        return $this->getUrl('panth_orderattachments/attachment/download', [
             'id' => $attachmentId
         ]);
     }

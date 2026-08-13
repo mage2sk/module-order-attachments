@@ -27,6 +27,7 @@ use Psr\Log\LoggerInterface;
 class Save implements HttpPostActionInterface, CsrfAwareActionInterface
 {
     private const XML_PATH_ENABLED = 'panth_orderattachments/general/enabled';
+    private const XML_PATH_ENABLE_ALL_PRODUCTS = 'panth_orderattachments/general/enable_all_products';
     private const XML_PATH_ALLOWED_EXTENSIONS = 'panth_orderattachments/upload/allowed_extensions';
     private const XML_PATH_MAX_FILE_SIZE = 'panth_orderattachments/upload/max_file_size';
     private const UPLOAD_DIR = 'panth/order-attachments';
@@ -247,7 +248,13 @@ class Save implements HttpPostActionInterface, CsrfAwareActionInterface
             throw new LocalizedException(__('Product not found.'));
         }
 
-        if (!$product->getData('panth_allow_order_attachment')) {
+        $allowAttachment = $product->getData('panth_allow_order_attachment');
+
+        $allowed = $this->scopeConfig->isSetFlag(self::XML_PATH_ENABLE_ALL_PRODUCTS, ScopeInterface::SCOPE_STORE)
+            ? ($allowAttachment === null || (bool) $allowAttachment)
+            : (bool) $allowAttachment;
+
+        if (!$allowed) {
             throw new LocalizedException(__('This product does not allow file attachments.'));
         }
     }

@@ -5,6 +5,7 @@
         <panth_orderattachments>
             <general>
                 <enabled>1</enabled>
+                <enable_all_products>0</enable_all_products>
             </general>
             <upload>
                 <allowed_extensions>pdf,jpg,jpeg,png,gif,doc,docx,zip</allowed_extensions>
