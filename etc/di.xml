@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="panth_orderattachments_listing_data_source" xsi:type="string">Panth\OrderAttachments\Model\ResourceModel\OrderAttachment\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Panth\OrderAttachments\Ui\AttachmentGridFulltextFilter" type="Panth\OrderAttachments\Ui\Component\Listing\LikeFulltextFilter">
+        <arguments>
+            <argument name="columns" xsi:type="array">
+                <item name="original_filename" xsi:type="string">main_table.original_filename</item>
+                <item name="customer_email" xsi:type="string">main_table.customer_email</item>
+                <item name="file_extension" xsi:type="string">main_table.file_extension</item>
+                <item name="order_id" xsi:type="string">main_table.order_id</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Panth\OrderAttachments\Ui\AttachmentGridFilterPool" type="Magento\Framework\View\Element\UiComponent\DataProvider\FilterPool">
+        <arguments>
+            <argument name="appliers" xsi:type="array">
+                <item name="regular" xsi:type="object">Magento\Framework\View\Element\UiComponent\DataProvider\RegularFilter</item>
+                <item name="fulltext" xsi:type="object">Panth\OrderAttachments\Ui\AttachmentGridFulltextFilter</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Panth\OrderAttachments\Ui\AttachmentGridReporting" type="Magento\Framework\View\Element\UiComponent\DataProvider\Reporting">
+        <arguments>
+            <argument name="filterPool" xsi:type="object">Panth\OrderAttachments\Ui\AttachmentGridFilterPool</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Panth\OrderAttachments\Ui\AttachmentGridDataProvider" type="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider">
+        <arguments>
+            <argument name="reporting" xsi:type="object">Panth\OrderAttachments\Ui\AttachmentGridReporting</argument>
+        </arguments>
+    </virtualType>
+</config>

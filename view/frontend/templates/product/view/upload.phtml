@@ -1,0 +1,563 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Order Attachments - Product Page Upload Component
+ *
+ * @var $block \Panth\OrderAttachments\Block\Product\View\Upload
+ * @var $escaper \Magento\Framework\Escaper
+ */
+
+if (!$block->shouldShow()) {
+    return;
+}
+
+$productId = $block->getProductId();
+$uploadConfig = $block->getUploadConfig();
+$uploadLabel = $block->getUploadLabel();
+$allowedExtensions = $block->getAllowedExtensions();
+$maxFileSize = $block->getMaxFileSize();
+$maxFiles = $block->getMaxFiles();
+?>
+
+<style>
+    .oa-wrap {
+        --oa-primary: var(--orderattachments-primary, #0D9488);
+        --oa-primary-dark: var(--orderattachments-primary-dark, #0F766E);
+        --oa-primary-light: var(--orderattachments-primary-light, #F0FDFA);
+        --oa-bg: var(--orderattachments-bg, #FFFFFF);
+        --oa-border: var(--orderattachments-border, #E5E5E5);
+        --oa-text: var(--orderattachments-text, #171717);
+        --oa-text-secondary: var(--orderattachments-text-secondary, #525252);
+        --oa-text-muted: var(--orderattachments-text-muted, var(--color-fg-secondary, #525252));
+        --oa-btn-from: var(--orderattachments-btn-from, var(--color-primary-fill, #0F766E));
+        --oa-btn-to: var(--orderattachments-btn-to, var(--color-primary-fill, #0F766E));
+        --oa-btn-text: var(--orderattachments-btn-text, #FFFFFF);
+        --oa-success: var(--orderattachments-success, #16A34A);
+        --oa-danger: var(--orderattachments-danger, #DC2626);
+        --oa-warning: var(--orderattachments-warning, #EAB308);
+        background: var(--oa-bg);
+        border: 1px solid var(--oa-border);
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin: 2rem 0 1.5rem;
+    }
+    /* Header */
+    .oa-hdr {
+        background: linear-gradient(135deg, var(--oa-btn-from), var(--oa-btn-to));
+        padding: 0.875rem 1.25rem;
+        display: flex; align-items: center; gap: 0.625rem;
+    }
+    .oa-hdr-icon {
+        width: 2rem; height: 2rem; border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .oa-hdr-icon svg { width: 1rem; height: 1rem; color: #fff; }
+    .oa-hdr h3 { font-size: 0.9375rem; font-weight: 700; color: #fff; margin: 0; line-height: 1.3; }
+    .oa-hdr p { font-size: 0.75rem; color: #fff; margin: 0.0625rem 0 0; }
+    .oa-body { padding: 1.25rem; }
+    /* Drop zone */
+    .oa-dropzone {
+        border: 2px dashed var(--oa-border);
+        border-radius: 0.625rem;
+        padding: 1.75rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s;
+        background: #FAFAFA;
+        position: relative;
+    }
+    .oa-dropzone:hover,
+    .oa-dropzone.dragover {
+        border-color: var(--oa-primary);
+        background: var(--oa-primary-light);
+    }
+    .oa-dropzone.dragover {
+        box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+    }
+    .oa-dropzone-icon {
+        width: 2.5rem; height: 2.5rem; margin: 0 auto 0.625rem;
+        background: var(--oa-primary-light);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .oa-dropzone-icon svg { width: 1.25rem; height: 1.25rem; color: var(--oa-primary); }
+    .oa-dropzone h4 {
+        font-size: 0.875rem; font-weight: 600; color: var(--oa-text); margin: 0 0 0.25rem;
+    }
+    .oa-dropzone h4 span { color: var(--oa-primary-dark); text-decoration: underline; }
+    .oa-dropzone p { font-size: 0.75rem; color: var(--oa-text-muted); margin: 0; }
+    .oa-dropzone input[type="file"] {
+        position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    /* Limits info bar */
+    .oa-limits {
+        display: flex; align-items: center; justify-content: center; gap: 1rem;
+        margin-top: 0.75rem; flex-wrap: wrap;
+    }
+    .oa-limits span {
+        display: flex; align-items: center; gap: 0.25rem;
+        font-size: 0.75rem; color: var(--oa-text-muted);
+    }
+    .oa-limits svg { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+    /* File list */
+    .oa-files { margin-top: 1rem; }
+    .oa-file {
+        display: flex; align-items: center; gap: 0.625rem;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid var(--oa-border);
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        background: #fff;
+        transition: border-color 0.2s;
+    }
+    .oa-file:hover { border-color: var(--oa-primary); }
+    .oa-file-icon {
+        width: 2rem; height: 2rem; border-radius: 0.375rem;
+        background: var(--oa-primary-light);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .oa-file-icon svg { width: 1rem; height: 1rem; color: var(--oa-primary); }
+    .oa-file-info { flex: 1; min-width: 0; }
+    .oa-file-name {
+        font-size: 0.8125rem; font-weight: 600; color: var(--oa-text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .oa-file-meta {
+        font-size: 0.75rem; color: var(--oa-text-muted); margin-top: 0.125rem;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .oa-file-status {
+        display: flex; align-items: center; gap: 0.25rem;
+        font-size: 0.75rem; font-weight: 600;
+    }
+    .oa-file-status.success { color: var(--oa-success); }
+    .oa-file-status.uploading { color: var(--oa-primary); }
+    .oa-file-status.error { color: var(--oa-danger); }
+    .oa-file-delete {
+        background: none; border: 1px solid #e5e5e5; border-radius: 0.375rem;
+        width: 1.75rem; height: 1.75rem;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s; flex-shrink: 0; padding: 0;
+    }
+    .oa-file-delete svg { width: 0.75rem; height: 0.75rem; color: var(--oa-text-muted); }
+    .oa-file-delete:hover { border-color: #fca5a5; background: #fef2f2; }
+    .oa-file-delete:hover svg { color: var(--oa-danger); }
+    /* Progress bar */
+    .oa-progress {
+        width: 100%; height: 4px; background: #E5E5E5;
+        border-radius: 2px; margin-top: 0.375rem; overflow: hidden;
+    }
+    .oa-progress-bar {
+        height: 100%; border-radius: 2px;
+        background: linear-gradient(90deg, var(--oa-btn-from), var(--oa-btn-to));
+        transition: width 0.3s ease;
+    }
+    @keyframes oa-progress-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    .oa-progress-bar.animating { animation: oa-progress-pulse 1.5s ease-in-out infinite; }
+    /* Note textarea */
+    .oa-note { margin-top: 0.75rem; }
+    .oa-note label {
+        display: block; font-size: 0.8125rem; font-weight: 600;
+        color: var(--oa-text); margin-bottom: 0.3125rem;
+    }
+    .oa-note textarea {
+        width: 100%; padding: 0.625rem 0.75rem;
+        font-size: 1rem; border: 1.5px solid var(--oa-border);
+        border-radius: 0.5rem; background: #fff; color: var(--oa-text);
+        transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+        box-sizing: border-box; resize: vertical; min-height: 3.5rem;
+        font-family: inherit;
+    }
+    .oa-note textarea:focus {
+        border-color: var(--oa-primary);
+        box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+    .oa-note textarea::placeholder { color: #737373; }
+    .oa-note .oa-hint { font-size: 0.75rem; color: var(--oa-text-muted); margin: 0.25rem 0 0; }
+    /* Trust badges */
+    .oa-trust {
+        display: flex; align-items: center; justify-content: center;
+        gap: 1rem; margin-top: 1rem; padding-top: 0.75rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    .oa-trust span {
+        display: flex; align-items: center; gap: 0.25rem;
+        font-size: 0.75rem; color: var(--oa-text-muted);
+    }
+    .oa-trust svg { width: 0.75rem; height: 0.75rem; color: var(--oa-primary); flex-shrink: 0; }
+    /* Toast notification */
+.oa-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .oa-dropzone:focus-visible { outline: 2px solid var(--oa-primary); outline-offset: 2px; }
+    .oa-toast {
+        padding: 0.625rem 1rem; font-size: 0.8125rem; font-weight: 500;
+        display: flex; align-items: center; gap: 0.5rem;
+        border-top: 1px solid #e8ecef;
+    }
+    .oa-toast.success { background: #f0fdf4; color: #166534; border-top-color: #bbf7d0; }
+    .oa-toast.error { background: #fef2f2; color: #991b1b; border-top-color: #fecaca; }
+    .oa-toast svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+    .oa-toast .close {
+        margin-left: auto; background: none; border: none;
+        cursor: pointer; color: inherit; opacity: 0.5; padding: 0;
+    }
+    .oa-toast .close:hover { opacity: 1; }
+    /* Counter badge */
+    .oa-counter {
+        display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,0.25); color: #fff;
+        font-size: 0.75rem; font-weight: 700;
+        min-width: 1.25rem; height: 1.25rem;
+        border-radius: 9999px; padding: 0 0.3rem;
+    }
+    /* Responsive */
+    @media (min-width: 640px) {
+        .oa-hdr { padding: 1rem 1.5rem; }
+        .oa-body { padding: 1.5rem; }
+        .oa-dropzone { padding: 2rem 1.5rem; }
+    }
+    @media (max-width: 639px) {
+        .oa-wrap { margin: 0.75rem 0; border-radius: 0.5rem; }
+        .oa-hdr { padding: 0.75rem 1rem; }
+        .oa-hdr h3 { font-size: 0.8125rem; }
+        .oa-hdr p { font-size: 0.75rem; }
+        .oa-body { padding: 1rem; }
+        .oa-dropzone { padding: 1.25rem 0.75rem; }
+        .oa-dropzone h4 { font-size: 0.8125rem; }
+        .oa-file { padding: 0.5rem 0.625rem; gap: 0.5rem; }
+        .oa-file-name { font-size: 0.75rem; }
+        .oa-trust { gap: 0.5rem; flex-wrap: wrap; }
+        .oa-trust span { font-size: 0.75rem; }
+        .oa-limits { gap: 0.5rem; }
+        .oa-limits span { font-size: 0.75rem; }
+    }
+</style>
+
+<?php /* Script MUST be before the x-data div so the function is defined when Alpine processes it */ ?>
+<script>
+function oaUpload_<?= (int)$productId ?>() {
+    const config = <?= /* @noEscape */ $uploadConfig ?>;
+    return {
+        config: config,
+        files: [],
+        customerNote: '',
+        isDragging: false,
+        notification: { show: false, message: '', type: 'success' },
+        fileIdCounter: 0,
+        get acceptString() { return this.config.allowedExtensions.map(ext => '.' + ext).join(','); },
+        init() {
+            this._form = document.querySelector('#product_addtocart_form, form[data-product-sku]');
+            // Load existing attachments when editing a cart item
+            if (this.config.existingAttachments && this.config.existingAttachments.length) {
+                this.config.existingAttachments.forEach(att => {
+                    this.files.push({
+                        id: 'existing-' + (++this.fileIdCounter),
+                        attachmentId: att.attachmentId,
+                        name: att.name,
+                        size: att.size,
+                        extension: att.extension,
+                        status: att.status,
+                        progress: att.progress,
+                        errorMessage: '',
+                        nativeFile: null,
+                    });
+                });
+                this.syncFormInputs();
+            }
+            if (this.config.existingNote) {
+                this.customerNote = this.config.existingNote;
+                this.syncFormInputs();
+            }
+        },
+        // Keep hidden inputs in sync with uploaded files at all times
+        syncFormInputs() {
+            if (!this._form) return;
+            // Sync attachment IDs
+            this._form.querySelectorAll('input[name="order_attachment_ids[]"]').forEach(el => el.remove());
+            this.files.filter(f => f.status === 'uploaded' && f.attachmentId).forEach(f => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'order_attachment_ids[]';
+                input.value = f.attachmentId;
+                this._form.appendChild(input);
+            });
+            // Sync customer note
+            let noteInput = this._form.querySelector('input[name="order_attachment_note"]');
+            if (this.customerNote) {
+                if (!noteInput) {
+                    noteInput = document.createElement('input');
+                    noteInput.type = 'hidden';
+                    noteInput.name = 'order_attachment_note';
+                    this._form.appendChild(noteInput);
+                }
+                noteInput.value = this.customerNote;
+            } else if (noteInput) {
+                noteInput.remove();
+            }
+        },
+        formatSize(bytes) {
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return bytes + ' B';
+        },
+        handleDrop(e) { this.isDragging = false; this.handleFiles(e.dataTransfer.files); },
+        handleFileSelect(e) { this.handleFiles(e.target.files); e.target.value = ''; },
+        handleFiles(fileList) {
+            Array.from(fileList).forEach(file => {
+                if (this.files.length >= this.config.maxFiles) {
+                    this.showNotification('Maximum ' + this.config.maxFiles + ' files allowed', 'error');
+                    return;
+                }
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!this.config.allowedExtensions.includes(ext)) {
+                    this.showNotification('"' + file.name + '" - file type not allowed', 'error');
+                    return;
+                }
+                if (file.size > this.config.maxFileSizeBytes) {
+                    this.showNotification('"' + file.name + '" exceeds ' + this.config.maxFileSize + 'MB limit', 'error');
+                    return;
+                }
+                const entry = {
+                    id: 'new-' + (++this.fileIdCounter), attachmentId: null,
+                    name: file.name, size: file.size, extension: ext,
+                    status: 'uploading', progress: 0, errorMessage: '', nativeFile: file
+                };
+                this.files.push(entry);
+                this.uploadFile(entry);
+            });
+        },
+        async uploadFile(fileEntry) {
+            const fd = new FormData();
+            fd.append('file', fileEntry.nativeFile);
+            fd.append('product_id', this.config.productId);
+            fd.append('form_key', hyva.getFormKey());
+            if (this.customerNote) fd.append('customer_note', this.customerNote);
+            // Honeypot: send the value of the hidden field (should always be empty for real users)
+            const hp = this.$refs.oaHoneypot;
+            if (hp) fd.append('oa_website_url', hp.value);
+            const idx = this.files.findIndex(f => f.id === fileEntry.id);
+            try {
+                const xhr = new XMLHttpRequest();
+                const self = this;
+                const p = new Promise((resolve, reject) => {
+                    xhr.upload.onprogress = (e) => { if (e.lengthComputable && idx >= 0) self.files[idx].progress = Math.round(e.loaded / e.total * 100); };
+                    xhr.onload = () => { try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(new Error('Bad response')); } };
+                    xhr.onerror = () => reject(new Error('Network error'));
+                });
+                xhr.open('POST', this.config.uploadUrl);
+                xhr.withCredentials = true;
+                xhr.send(fd);
+                const data = await p;
+                if (data.success && idx >= 0) {
+                    this.files[idx].status = 'uploaded';
+                    this.files[idx].progress = 100;
+                    this.files[idx].attachmentId = data.attachment_id;
+                    this.syncFormInputs();
+                    this.showNotification('"' + this.files[idx].name + '" uploaded', 'success');
+                } else {
+                    if (idx >= 0) { this.files[idx].status = 'error'; this.files[idx].errorMessage = data.message || 'Failed'; }
+                    this.showNotification(data.message || 'Upload failed. Contact support if this persists.', 'error');
+                }
+            } catch (err) {
+                if (idx >= 0) { this.files[idx].status = 'error'; this.files[idx].errorMessage = err.message; }
+                this.showNotification('Upload error. Please try again or contact support.', 'error');
+            }
+        },
+        async removeFile(index) {
+            const file = this.files[index];
+            if (!file) return;
+            if (file.attachmentId && file.status === 'uploaded') {
+                try {
+                    const fd = new FormData();
+                    fd.append('attachment_id', file.attachmentId);
+                    fd.append('product_id', this.config.productId);
+                    fd.append('form_key', hyva.getFormKey());
+                    const res = await fetch(this.config.deleteUrl, { method: 'POST', body: fd, credentials: 'include' });
+                    const data = await res.json();
+                    if (data.success) { this.files.splice(index, 1); this.syncFormInputs(); this.showNotification('File removed', 'success'); }
+                    else this.showNotification(data.message || 'Could not remove file', 'error');
+                } catch (e) { this.showNotification('Error removing file. Please try again.', 'error'); }
+            } else {
+                this.files.splice(index, 1);
+                this.syncFormInputs();
+            }
+        },
+        showNotification(message, type) {
+            this.notification = { show: true, message, type };
+            setTimeout(() => { this.notification.show = false; }, 5000);
+        }
+    };
+}
+</script>
+
+<div x-data="oaUpload_<?= (int)$productId ?>()" class="oa-wrap">
+
+    <!-- Honeypot: hidden from humans, bots will fill this -->
+    <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+        <input type="text" x-ref="oaHoneypot" name="oa_website_url" value="" tabindex="-1" autocomplete="off">
+    </div>
+
+    <!-- Header -->
+    <div class="oa-hdr">
+        <div class="oa-hdr-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+        </div>
+        <div style="flex:1;">
+            <h3><?= $escaper->escapeHtml($uploadLabel) ?></h3>
+            <p>Drag & drop or browse files to attach to your order</p>
+        </div>
+        <template x-if="files.length > 0">
+            <span class="oa-counter" x-text="files.length + '/' + config.maxFiles"></span>
+        </template>
+    </div>
+
+    <div class="oa-body">
+        <!-- Drop Zone -->
+        <div class="oa-dropzone"
+             :class="{ 'dragover': isDragging }"
+             @dragover.prevent="isDragging = true"
+             @dragleave.prevent="isDragging = false"
+             @drop.prevent="handleDrop($event)"
+             @click="$refs.fileInput.click()"
+             @keydown.enter.prevent="$refs.fileInput.click()"
+             @keydown.space.prevent="$refs.fileInput.click()"
+             role="button"
+             tabindex="0"
+             aria-label="<?= $escaper->escapeHtmlAttr(__('Attach files: drop files here or press Enter to browse')) ?>"
+             x-show="files.length < config.maxFiles">
+            <input type="file" x-ref="fileInput"
+                   multiple
+                   :accept="acceptString"
+                   @change="handleFileSelect($event)"
+                   style="display:none;">
+            <div class="oa-dropzone-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            </div>
+            <h4>Drop files here or <span>browse</span></h4>
+            <p x-text="'Up to ' + config.maxFiles + ' files, max ' + config.maxFileSize + 'MB each'"></p>
+        </div>
+
+        <!-- Max files reached notice -->
+        <div x-show="files.length >= config.maxFiles"
+             style="text-align:center; padding:1rem; background:#FFFBEB; border:1px solid #FDE68A; border-radius:0.5rem;">
+            <p style="font-size:0.8125rem; font-weight:600; color:#92400E; margin:0;">
+                Maximum files reached (<span x-text="config.maxFiles"></span>)
+            </p>
+            <p style="font-size:0.75rem; color:#A16207; margin:0.25rem 0 0;">
+                Remove a file to upload a new one.
+            </p>
+        </div>
+
+        <!-- Limits info -->
+        <div class="oa-limits">
+            <span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <?= $escaper->escapeHtml($allowedExtensions) ?>
+            </span>
+            <span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                Max <?= (int)$maxFileSize ?>MB per file
+            </span>
+            <span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                Up to <?= (int)$maxFiles ?> files
+            </span>
+        </div>
+
+        <!-- Uploaded Files List -->
+        <div class="oa-files" x-show="files.length > 0">
+            <template x-for="(file, index) in files" :key="file.id || index">
+                <div class="oa-file">
+                    <div class="oa-file-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div class="oa-file-info">
+                        <div class="oa-file-name" x-text="file.name"></div>
+                        <div class="oa-file-meta">
+                            <span x-text="formatSize(file.size)"></span>
+                            <span>&middot;</span>
+                            <span x-text="file.extension?.toUpperCase()"></span>
+                        </div>
+                        <!-- Progress bar during upload -->
+                        <template x-if="file.status === 'uploading'">
+                            <div class="oa-progress">
+                                <div class="oa-progress-bar animating" :style="'width:' + file.progress + '%'"></div>
+                            </div>
+                        </template>
+                    </div>
+                    <!-- Status -->
+                    <div class="oa-file-status"
+                         :class="{ success: file.status === 'uploaded', uploading: file.status === 'uploading', error: file.status === 'error' }">
+                        <template x-if="file.status === 'uploaded'">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:0.875rem; height:0.875rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </template>
+                        <template x-if="file.status === 'uploading'">
+                            <div class="animate-spin rounded-full" style="width:0.875rem; height:0.875rem; border:2px solid rgba(79,70,229,0.2); border-top-color:var(--oa-primary);"></div>
+                        </template>
+                        <template x-if="file.status === 'error'">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:0.875rem; height:0.875rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </template>
+                        <span x-text="file.status === 'uploaded' ? 'Done' : file.status === 'uploading' ? (file.progress + '%') : (file.errorMessage || 'Failed')"></span>
+                    </div>
+                    <!-- Delete button -->
+                    <button class="oa-file-delete"
+                            @click="removeFile(index)"
+                            :disabled="file.status === 'uploading'"
+                            type="button"
+                            title="Remove file"
+                            :aria-label="'Remove ' + file.name">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>
+            </template>
+        </div>
+
+        <!-- Customer Note -->
+        <div class="oa-note" x-show="files.length > 0">
+            <label for="oa-note-<?= (int)$productId ?>">
+                Note <span style="font-weight:400; color:#6B7280;">(Optional)</span>
+            </label>
+            <textarea id="oa-note-<?= (int)$productId ?>"
+                      x-model="customerNote"
+                      @input.debounce.300ms="syncFormInputs()"
+                      placeholder="Add any special instructions or notes about your files..."
+                      rows="2"
+                      maxlength="500"></textarea>
+            <p class="oa-hint">
+                <span x-text="customerNote.length"></span>/500 characters
+            </p>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="oa-trust">
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                Secure Upload
+            </span>
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                Files Attached to Order
+            </span>
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                Download Anytime
+            </span>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="oa-sr" role="status" aria-live="polite" x-text="notification.show ? notification.message : ''"></div>
+    <div x-show="notification.show" x-transition class="oa-toast" :class="notification.type">
+        <svg x-show="notification.type === 'success'" style="color:#16a34a;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <svg x-show="notification.type === 'error'" style="color:#dc2626;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <span x-text="notification.message"></span>
+        <button @click="notification.show = false" class="close" type="button" aria-label="<?= $escaper->escapeHtmlAttr(__('Close')) ?>">
+            <svg style="width:0.75rem; height:0.75rem;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+    </div>
+</div>
+

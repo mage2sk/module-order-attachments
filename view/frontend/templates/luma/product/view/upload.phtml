@@ -1,0 +1,732 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Order Attachments - Product Page Upload Component (Luma - Vanilla JS)
+ *
+ * @var $block \Panth\OrderAttachments\Block\Product\View\Upload
+ * @var $escaper \Magento\Framework\Escaper
+ */
+
+if (!$block->shouldShow()) {
+    return;
+}
+
+$productId = $block->getProductId();
+$uploadConfig = $block->getUploadConfig();
+$uploadLabel = $block->getUploadLabel();
+$allowedExtensions = $block->getAllowedExtensions();
+$maxFileSize = $block->getMaxFileSize();
+$maxFiles = $block->getMaxFiles();
+$uniqueId = 'oa-' . (int)$productId;
+?>
+
+<style>
+    .oa-wrap {
+        --oa-primary: var(--orderattachments-primary, #0D9488);
+        --oa-primary-dark: var(--orderattachments-primary-dark, #0F766E);
+        --oa-primary-light: var(--orderattachments-primary-light, #F0FDFA);
+        --oa-bg: var(--orderattachments-bg, #FFFFFF);
+        --oa-border: var(--orderattachments-border, #E5E5E5);
+        --oa-text: var(--orderattachments-text, #171717);
+        --oa-text-secondary: var(--orderattachments-text-secondary, #525252);
+        --oa-text-muted: var(--orderattachments-text-muted, var(--color-fg-secondary, #525252));
+        --oa-btn-from: var(--orderattachments-btn-from, var(--color-primary-fill, #0F766E));
+        --oa-btn-to: var(--orderattachments-btn-to, var(--color-primary-fill, #0F766E));
+        --oa-btn-text: var(--orderattachments-btn-text, #FFFFFF);
+        --oa-success: var(--orderattachments-success, #15803D);
+        --oa-danger: var(--orderattachments-danger, #DC2626);
+        --oa-warning: var(--orderattachments-warning, #EAB308);
+        background: var(--oa-bg);
+        border: 1px solid var(--oa-border);
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin: 32px 0 24px;
+        font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
+    }
+    .oa-hdr {
+        background: linear-gradient(135deg, var(--oa-btn-from), var(--oa-btn-to));
+        padding: 14px 20px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .oa-hdr-icon {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .oa-hdr-icon svg { width: 16px; height: 16px; color: #fff; }
+    .oa-hdr h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; line-height: 1.3; }
+    .oa-hdr p { font-size: 12px; color: #fff; margin: 1px 0 0; }
+    .oa-body { padding: 20px; }
+    .oa-dropzone {
+        border: 2px dashed var(--oa-border);
+        border-radius: 10px;
+        padding: 28px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s;
+        background: #FAFAFA;
+        position: relative;
+    }
+    .oa-dropzone:hover,
+    .oa-dropzone.dragover {
+        border-color: var(--oa-primary);
+        background: var(--oa-primary-light);
+    }
+    .oa-dropzone-icon {
+        width: 40px; height: 40px; margin: 0 auto 10px;
+        background: var(--oa-primary-light);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .oa-dropzone-icon svg { width: 20px; height: 20px; color: var(--oa-primary); }
+    .oa-dropzone h4 {
+        font-size: 14px; font-weight: 600; color: var(--oa-text); margin: 0 0 4px;
+    }
+    .oa-dropzone h4 span { color: var(--oa-primary-dark); text-decoration: underline; }
+    .oa-dropzone p { font-size: 12px; color: var(--oa-text-muted); margin: 0; }
+    .oa-limits {
+        display: flex; align-items: center; justify-content: center; gap: 16px;
+        margin-top: 12px; flex-wrap: wrap;
+    }
+    .oa-limits span {
+        display: flex; align-items: center; gap: 4px;
+        font-size: 12px; color: var(--oa-text-muted);
+    }
+    .oa-limits svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .oa-files { margin-top: 16px; }
+    .oa-file {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--oa-border);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: #fff;
+        transition: border-color 0.2s;
+    }
+    .oa-file:hover { border-color: var(--oa-primary); }
+    .oa-file-icon {
+        width: 32px; height: 32px; border-radius: 6px;
+        background: var(--oa-primary-light);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .oa-file-icon svg { width: 16px; height: 16px; color: var(--oa-primary); }
+    .oa-file-info { flex: 1; min-width: 0; }
+    .oa-file-name {
+        font-size: 13px; font-weight: 600; color: var(--oa-text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .oa-file-meta {
+        font-size: 12px; color: var(--oa-text-muted); margin-top: 2px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .oa-file-status {
+        display: flex; align-items: center; gap: 4px;
+        font-size: 12px; font-weight: 600;
+    }
+    .oa-file-status.success { color: var(--oa-success); }
+    .oa-file-status.uploading { color: var(--oa-primary-dark); }
+    .oa-file-status.error { color: var(--oa-danger); }
+    .oa-file { flex-wrap: wrap; }
+    .oa-file-meta { white-space: nowrap; }
+    .oa-file-status { flex-shrink: 0; }
+    .oa-file-status.error { order: 3; flex: 0 0 100%; padding-left: 42px; box-sizing: border-box; font-weight: 500; }
+    .oa-file-delete {
+        background: none; border: 1px solid #e5e5e5; border-radius: 6px;
+        width: 44px; height: 44px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s; flex-shrink: 0; padding: 0;
+    }
+    .oa-file-delete svg { width: 14px; height: 14px; color: var(--oa-text-muted); }
+    .oa-file-delete:hover { border-color: #fca5a5; background: #fef2f2; }
+    .oa-file-delete:hover svg { color: var(--oa-danger); }
+    .oa-progress {
+        width: 100%; height: 4px; background: #E5E5E5;
+        border-radius: 2px; margin-top: 6px; overflow: hidden;
+    }
+    .oa-progress-bar {
+        height: 100%; border-radius: 2px;
+        background: linear-gradient(90deg, var(--oa-btn-from), var(--oa-btn-to));
+        transition: width 0.3s ease;
+    }
+    @keyframes oa-progress-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    .oa-progress-bar.animating { animation: oa-progress-pulse 1.5s ease-in-out infinite; }
+    .oa-note { margin-top: 12px; }
+    .oa-note label {
+        display: block; font-size: 13px; font-weight: 600;
+        color: var(--oa-text); margin-bottom: 5px;
+    }
+    .oa-note textarea {
+        width: 100%; padding: 10px 12px;
+        font-size: 16px; border: 1.5px solid var(--oa-border);
+        border-radius: 8px; background: #fff; color: var(--oa-text);
+        transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+        box-sizing: border-box; resize: vertical; min-height: 56px;
+        font-family: inherit;
+    }
+    .oa-note textarea:focus {
+        border-color: var(--oa-primary);
+        box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+    }
+    .oa-note textarea::placeholder { color: #737373; }
+    .oa-note .oa-hint { font-size: 12px; color: var(--oa-text-muted); margin: 4px 0 0; }
+    .oa-trust {
+        display: flex; align-items: center; justify-content: center;
+        gap: 16px; margin-top: 16px; padding-top: 12px;
+        border-top: 1px solid #f0f0f0;
+    }
+    .oa-trust span {
+        display: flex; align-items: center; gap: 4px;
+        font-size: 12px; color: var(--oa-text-muted);
+    }
+    .oa-trust svg { width: 12px; height: 12px; color: var(--oa-primary); flex-shrink: 0; }
+.oa-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .oa-dropzone:focus-visible { outline: 2px solid var(--oa-primary); outline-offset: 2px; }
+    .oa-toast {
+        padding: 10px 16px; font-size: 13px; font-weight: 500;
+        display: none; align-items: center; gap: 8px;
+        border-top: 1px solid #e8ecef;
+    }
+    .oa-toast.visible { display: flex; }
+    .oa-toast.success { background: #f0fdf4; color: #166534; border-top-color: #bbf7d0; }
+    .oa-toast.error { background: #fef2f2; color: #991b1b; border-top-color: #fecaca; }
+    .oa-toast svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .oa-toast .close {
+        margin-left: auto; background: none; border: none;
+        cursor: pointer; color: inherit; opacity: 0.7; padding: 0;
+        min-width: 44px; min-height: 44px;
+        display: inline-flex; align-items: center; justify-content: center;
+    }
+    .oa-toast .close:hover { opacity: 1; }
+    .oa-file-delete:focus-visible, .oa-toast .close:focus-visible { outline: 2px solid var(--oa-primary); outline-offset: 2px; opacity: 1; }
+    .oa-counter {
+        display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.25); color: #fff;
+        font-size: 12px; font-weight: 700;
+        min-width: 20px; height: 20px;
+        border-radius: 9999px; padding: 0 5px;
+    }
+    .oa-max-notice {
+        text-align: center; padding: 16px; background: #FFFBEB;
+        border: 1px solid #FDE68A; border-radius: 8px; display: none;
+    }
+    .oa-max-notice p:first-child { font-size: 13px; font-weight: 600; color: #92400E; margin: 0; }
+    .oa-max-notice p:last-child { font-size: 12px; color: #A16207; margin: 4px 0 0; }
+    @media (min-width: 640px) {
+        .oa-hdr { padding: 16px 24px; }
+        .oa-body { padding: 24px; }
+        .oa-dropzone { padding: 32px 24px; }
+    }
+    @media (max-width: 639px) {
+        .oa-wrap { margin: 12px 0; border-radius: 8px; }
+        .oa-hdr { padding: 12px 16px; }
+        .oa-hdr h3 { font-size: 15px; }
+        .oa-hdr p { font-size: 12px; }
+        .oa-body { padding: 16px; }
+        .oa-dropzone { padding: 20px 12px; }
+        .oa-dropzone h4 { font-size: 14px; }
+        .oa-file { padding: 8px 10px; gap: 8px; }
+        .oa-file-name { font-size: 14px; }
+        .oa-trust { gap: 8px; flex-wrap: wrap; }
+        .oa-trust span { font-size: 12px; }
+        .oa-limits { gap: 8px; }
+        .oa-limits span { font-size: 12px; }
+        .oa-note label, .oa-toast { font-size: 14px; }
+        .oa-file-status { font-size: 13px; }
+    }
+</style>
+
+<div class="oa-wrap" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>">
+    <!-- Honeypot -->
+    <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+        <input type="text" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-honeypot" name="oa_website_url" value="" tabindex="-1" autocomplete="off">
+    </div>
+
+    <!-- Header -->
+    <div class="oa-hdr">
+        <div class="oa-hdr-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+        </div>
+        <div style="flex:1;">
+            <h3><?= $escaper->escapeHtml($uploadLabel) ?></h3>
+            <p>Drag & drop or browse files to attach to your order</p>
+        </div>
+        <span class="oa-counter" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-counter" style="display:none;"></span>
+    </div>
+
+    <div class="oa-body">
+        <!-- Drop Zone -->
+        <div class="oa-dropzone" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-dropzone" role="button" tabindex="0" aria-label="<?= $escaper->escapeHtmlAttr(__('Attach files: drop files here or press Enter to browse')) ?>">
+            <input type="file" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-fileinput" multiple style="display:none;">
+            <div class="oa-dropzone-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            </div>
+            <h4>Drop files here or <span>browse</span></h4>
+            <p>Up to <?= (int)$maxFiles ?> files, max <?= (int)$maxFileSize ?>MB each</p>
+        </div>
+
+        <!-- Max files reached notice -->
+        <div class="oa-max-notice" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-maxnotice">
+            <p>Maximum files reached (<span id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-maxcount"><?= (int)$maxFiles ?></span>)</p>
+            <p>Remove a file to upload a new one.</p>
+        </div>
+
+        <!-- Limits info -->
+        <div class="oa-limits">
+            <span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <?= $escaper->escapeHtml($allowedExtensions) ?>
+            </span>
+            <span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                Max <?= (int)$maxFileSize ?>MB per file
+            </span>
+            <span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                Up to <?= (int)$maxFiles ?> files
+            </span>
+        </div>
+
+        <!-- Uploaded Files List -->
+        <div class="oa-files" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-files" style="display:none;"></div>
+
+        <!-- Customer Note -->
+        <div class="oa-note" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-noteblock" style="display:none;">
+            <label for="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-note">
+                Note <span style="font-weight:400; color:#6B7280;">(Optional)</span>
+            </label>
+            <textarea id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-note"
+                      placeholder="Add any special instructions or notes about your files..."
+                      rows="2"
+                      maxlength="500"></textarea>
+            <p class="oa-hint">
+                <span id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-notecount">0</span>/500 characters
+            </p>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="oa-trust">
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                Secure Upload
+            </span>
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                Files Attached to Order
+            </span>
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                Download Anytime
+            </span>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="oa-sr" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-live" role="status" aria-live="polite"></div>
+    <div class="oa-toast" id="<?= $escaper->escapeHtmlAttr($uniqueId) ?>-toast">
+        <svg class="oa-toast-success-icon" style="color:#16a34a; display:none;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <svg class="oa-toast-error-icon" style="color:#dc2626; display:none;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <span class="oa-toast-msg"></span>
+        <button class="close" type="button" aria-label="<?= $escaper->escapeHtmlAttr(__('Close')) ?>">
+            <svg style="width:12px; height:12px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    'use strict';
+
+    var config = <?= /* @noEscape */ $uploadConfig ?>;
+    var uid = '<?= $escaper->escapeJs($uniqueId) ?>';
+    var files = [];
+    var fileIdCounter = 0;
+
+    // DOM elements
+    var wrap = document.getElementById(uid);
+    var dropzone = document.getElementById(uid + '-dropzone');
+    var fileInput = document.getElementById(uid + '-fileinput');
+    var filesContainer = document.getElementById(uid + '-files');
+    var counter = document.getElementById(uid + '-counter');
+    var maxNotice = document.getElementById(uid + '-maxnotice');
+    var noteBlock = document.getElementById(uid + '-noteblock');
+    var noteTextarea = document.getElementById(uid + '-note');
+    var noteCount = document.getElementById(uid + '-notecount');
+    var honeypot = document.getElementById(uid + '-honeypot');
+    var toast = document.getElementById(uid + '-toast');
+
+    // Find form
+    var form = document.querySelector('#product_addtocart_form') ||
+               document.querySelector('form[data-product-sku]');
+
+    // Get Magento form key from cookie
+    function getFormKey() {
+        var match = document.cookie.match(/form_key=([^;]+)/);
+        if (match) return match[1];
+        var el = document.querySelector('input[name="form_key"]');
+        return el ? el.value : '';
+    }
+
+    function formatSize(bytes) {
+        if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+        if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return bytes + ' B';
+    }
+
+    // ═══ Render ═══
+    function render() {
+        // Counter
+        if (files.length > 0) {
+            counter.textContent = files.length + '/' + config.maxFiles;
+            counter.style.display = '';
+        } else {
+            counter.style.display = 'none';
+        }
+
+        // Dropzone vs max notice
+        if (files.length >= config.maxFiles) {
+            dropzone.style.display = 'none';
+            maxNotice.style.display = 'block';
+        } else {
+            dropzone.style.display = '';
+            maxNotice.style.display = 'none';
+        }
+
+        // Files list
+        if (files.length > 0) {
+            filesContainer.style.display = '';
+            noteBlock.style.display = '';
+        } else {
+            filesContainer.style.display = 'none';
+            noteBlock.style.display = 'none';
+        }
+
+        // Render file items
+        filesContainer.innerHTML = '';
+        files.forEach(function(file, index) {
+            var div = document.createElement('div');
+            div.className = 'oa-file';
+
+            var statusClass = file.status === 'uploaded' ? 'success' : file.status === 'uploading' ? 'uploading' : 'error';
+            var statusText = file.status === 'uploaded' ? 'Done' : file.status === 'uploading' ? (file.progress + '%') : (file.errorMessage || 'Failed');
+
+            var statusIcon = '';
+            if (file.status === 'uploaded') {
+                statusIcon = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+            } else if (file.status === 'uploading') {
+                statusIcon = '<div style="width:14px;height:14px;border:2px solid rgba(13,148,136,0.2);border-top-color:var(--oa-primary);border-radius:50%;animation:oa-spin 0.8s linear infinite;"></div>';
+            } else {
+                statusIcon = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+            }
+
+            var progressHtml = '';
+            if (file.status === 'uploading') {
+                progressHtml = '<div class="oa-progress"><div class="oa-progress-bar animating" style="width:' + file.progress + '%"></div></div>';
+            }
+
+            div.innerHTML =
+                '<div class="oa-file-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>' +
+                '<div class="oa-file-info">' +
+                    '<div class="oa-file-name">' + escapeHtml(file.name) + '</div>' +
+                    '<div class="oa-file-meta"><span>' + formatSize(file.size) + '</span><span>&middot;</span><span>' + escapeHtml((file.extension || '').toUpperCase()) + '</span></div>' +
+                    progressHtml +
+                '</div>' +
+                '<div class="oa-file-status ' + statusClass + '">' + statusIcon + '<span>' + escapeHtml(statusText) + '</span></div>' +
+                '<button class="oa-file-delete" type="button" title="Remove file" aria-label="Remove ' + escapeAttr(file.name) + '" data-index="' + index + '"' + (file.status === 'uploading' ? ' disabled' : '') + '>' +
+                    '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+                '</button>';
+
+            filesContainer.appendChild(div);
+        });
+
+        // Bind delete buttons
+        filesContainer.querySelectorAll('.oa-file-delete').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                removeFile(parseInt(this.getAttribute('data-index')));
+            });
+        });
+
+        syncFormInputs();
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    function escapeAttr(str) {
+        return escapeHtml(str).replace(/"/g, '&quot;');
+    }
+
+    function focusAfterRemoval(index) {
+        var buttons = filesContainer.querySelectorAll('.oa-file-delete:not([disabled])');
+        var target = buttons.length ? buttons[Math.min(index, buttons.length - 1)] : dropzone;
+        if (target && target.offsetParent !== null) {
+            target.focus();
+        }
+    }
+
+    // ═══ Sync hidden form inputs ═══
+    function syncFormInputs() {
+        if (!form) return;
+        // Remove old hidden inputs
+        form.querySelectorAll('input[name="order_attachment_ids[]"]').forEach(function(el) { el.remove(); });
+        // Add current
+        files.forEach(function(f) {
+            if (f.status === 'uploaded' && f.attachmentId) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'order_attachment_ids[]';
+                input.value = f.attachmentId;
+                form.appendChild(input);
+            }
+        });
+        // Sync note
+        var noteVal = noteTextarea ? noteTextarea.value : '';
+        var noteInput = form.querySelector('input[name="order_attachment_note"]');
+        if (noteVal) {
+            if (!noteInput) {
+                noteInput = document.createElement('input');
+                noteInput.type = 'hidden';
+                noteInput.name = 'order_attachment_note';
+                form.appendChild(noteInput);
+            }
+            noteInput.value = noteVal;
+        } else if (noteInput) {
+            noteInput.remove();
+        }
+    }
+
+    // ═══ Show toast ═══
+    var toastTimer = null;
+    function showNotification(message, type) {
+        if (toastTimer) clearTimeout(toastTimer);
+        toast.className = 'oa-toast visible ' + type;
+        toast.querySelector('.oa-toast-msg').textContent = message;
+        var live = document.getElementById(uid + '-live');
+        if (live) live.textContent = message;
+        toast.querySelector('.oa-toast-success-icon').style.display = type === 'success' ? '' : 'none';
+        toast.querySelector('.oa-toast-error-icon').style.display = type === 'error' ? '' : 'none';
+        toastTimer = null;
+        if (type === 'success') {
+            toastTimer = setTimeout(function() {
+                toast.className = 'oa-toast';
+            }, 5000);
+        }
+    }
+
+    toast.querySelector('.close').addEventListener('click', function() {
+        toast.className = 'oa-toast';
+    });
+
+    // ═══ Handle files ═══
+    function handleFiles(fileList) {
+        Array.from(fileList).forEach(function(file) {
+            if (files.length >= config.maxFiles) {
+                showNotification('Maximum ' + config.maxFiles + ' files allowed', 'error');
+                return;
+            }
+            var ext = file.name.split('.').pop().toLowerCase();
+            if (!config.allowedExtensions.includes(ext)) {
+                showNotification('"' + file.name + '" - file type not allowed', 'error');
+                return;
+            }
+            if (file.size > config.maxFileSizeBytes) {
+                showNotification('"' + file.name + '" exceeds ' + config.maxFileSize + 'MB limit', 'error');
+                return;
+            }
+            var entry = {
+                id: 'new-' + (++fileIdCounter),
+                attachmentId: null,
+                name: file.name,
+                size: file.size,
+                extension: ext,
+                status: 'uploading',
+                progress: 0,
+                errorMessage: '',
+                nativeFile: file
+            };
+            files.push(entry);
+            render();
+            uploadFile(entry);
+        });
+    }
+
+    // ═══ Upload file ═══
+    function uploadFile(fileEntry) {
+        var fd = new FormData();
+        fd.append('file', fileEntry.nativeFile);
+        fd.append('product_id', config.productId);
+        fd.append('form_key', getFormKey());
+        if (noteTextarea && noteTextarea.value) fd.append('customer_note', noteTextarea.value);
+        if (honeypot) fd.append('oa_website_url', honeypot.value);
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.upload.onprogress = function(e) {
+            var idx = files.indexOf(fileEntry);
+            if (e.lengthComputable && idx >= 0) {
+                files[idx].progress = Math.round(e.loaded / e.total * 100);
+                render();
+            }
+        };
+
+        xhr.onload = function() {
+            var idx = files.indexOf(fileEntry);
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data.success && idx >= 0) {
+                    files[idx].status = 'uploaded';
+                    files[idx].progress = 100;
+                    files[idx].attachmentId = data.attachment_id;
+                    showNotification('"' + files[idx].name + '" uploaded', 'success');
+                } else {
+                    if (idx >= 0) {
+                        files[idx].status = 'error';
+                        files[idx].errorMessage = data.message || 'Failed';
+                    }
+                    showNotification(data.message || 'Upload failed.', 'error');
+                }
+            } catch (e) {
+                if (idx >= 0) {
+                    files[idx].status = 'error';
+                    files[idx].errorMessage = 'Bad response';
+                }
+                showNotification('Upload error. Please try again.', 'error');
+            }
+            render();
+        };
+
+        xhr.onerror = function() {
+            var idx = files.indexOf(fileEntry);
+            if (idx >= 0) {
+                files[idx].status = 'error';
+                files[idx].errorMessage = 'Network error';
+            }
+            showNotification('Upload error. Please try again.', 'error');
+            render();
+        };
+
+        xhr.open('POST', config.uploadUrl);
+        xhr.withCredentials = true;
+        xhr.send(fd);
+    }
+
+    // ═══ Remove file ═══
+    function removeFile(index) {
+        var file = files[index];
+        if (!file) return;
+
+        if (file.attachmentId && file.status === 'uploaded') {
+            var fd = new FormData();
+            fd.append('attachment_id', file.attachmentId);
+            fd.append('product_id', config.productId);
+            fd.append('form_key', getFormKey());
+
+            var xhr = new XMLHttpRequest();
+            xhr.onload = function() {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.success) {
+                        var current = files.indexOf(file);
+                        if (current >= 0) {
+                            files.splice(current, 1);
+                        }
+                        render();
+                        focusAfterRemoval(current >= 0 ? current : index);
+                        showNotification('File removed', 'success');
+                    } else {
+                        showNotification(data.message || 'Could not remove file', 'error');
+                    }
+                } catch (e) {
+                    showNotification('Error removing file.', 'error');
+                }
+            };
+            xhr.onerror = function() {
+                showNotification('Error removing file.', 'error');
+            };
+            xhr.open('POST', config.deleteUrl);
+            xhr.withCredentials = true;
+            xhr.send(fd);
+        } else {
+            files.splice(index, 1);
+            render();
+            focusAfterRemoval(index);
+        }
+    }
+
+    // ═══ Drag & drop ═══
+    dropzone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+    });
+    dropzone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+    dropzone.addEventListener('click', function() {
+        fileInput.click();
+    });
+    dropzone.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+    fileInput.addEventListener('change', function(e) {
+        handleFiles(e.target.files);
+        e.target.value = '';
+    });
+
+    // Set accept attribute
+    fileInput.setAttribute('accept', config.allowedExtensions.map(function(ext) { return '.' + ext; }).join(','));
+
+    // ═══ Note textarea ═══
+    if (noteTextarea) {
+        var noteTimer = null;
+        noteTextarea.addEventListener('input', function() {
+            noteCount.textContent = noteTextarea.value.length;
+            if (noteTimer) clearTimeout(noteTimer);
+            noteTimer = setTimeout(syncFormInputs, 300);
+        });
+    }
+
+    // ═══ Load existing attachments (cart edit mode) ═══
+    if (config.existingAttachments && config.existingAttachments.length) {
+        config.existingAttachments.forEach(function(att) {
+            files.push({
+                id: 'existing-' + (++fileIdCounter),
+                attachmentId: att.attachmentId,
+                name: att.name,
+                size: att.size,
+                extension: att.extension,
+                status: att.status,
+                progress: att.progress,
+                errorMessage: '',
+                nativeFile: null
+            });
+        });
+    }
+    if (config.existingNote && noteTextarea) {
+        noteTextarea.value = config.existingNote;
+        noteCount.textContent = config.existingNote.length;
+    }
+
+    // Initial render
+    render();
+});
+
+// Spinner animation
+var oaSpinStyle = document.createElement('style');
+oaSpinStyle.textContent = '@keyframes oa-spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(oaSpinStyle);
+</script>

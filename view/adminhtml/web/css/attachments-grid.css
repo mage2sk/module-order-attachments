@@ -1,0 +1,7 @@
+.panth_orderattachments-attachment-index .data-grid td {
+    overflow-wrap: anywhere;
+}
+.panth_orderattachments-attachment-index .data-grid td.data-grid-actions-cell {
+    overflow-wrap: normal;
+    white-space: nowrap;
+}

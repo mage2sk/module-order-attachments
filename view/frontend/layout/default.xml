@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Global lightbox script for attachment image popups in cart/minicart
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="before.body.end">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="panth.orderattachments.lightbox"
+                   template="Panth_OrderAttachments::lightbox.phtml"
+                   ifconfig="panth_orderattachments/general/enabled"/>
+        </referenceContainer>
+    </body>
+</page>

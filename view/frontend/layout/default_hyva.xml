@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Hyva Layout - Override Luma template with Alpine.js version
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Switch back to Alpine.js template on Hyva -->
+        <referenceBlock name="product.order.attachments.upload"
+                        template="Panth_OrderAttachments::product/view/upload.phtml"/>
+    </body>
+</page>

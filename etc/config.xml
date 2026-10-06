@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <panth_orderattachments>
+            <general>
+                <enabled>1</enabled>
+                <enable_all_products>0</enable_all_products>
+            </general>
+            <upload>
+                <allowed_extensions>pdf,jpg,jpeg,png,gif,doc,docx,zip</allowed_extensions>
+                <max_file_size>10</max_file_size>
+                <max_files_per_item>3</max_files_per_item>
+            </upload>
+            <display>
+                <upload_label>Attach Files</upload_label>
+            </display>
+        </panth_orderattachments>
+    </default>
+</config>

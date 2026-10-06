@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="panth" translate="label" sortOrder="400">
+            <label>Panth</label>
+        </tab>
+        <section id="panth_orderattachments" translate="label" sortOrder="10"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Order Attachments</label>
+            <tab>panth</tab>
+            <resource>Panth_OrderAttachments::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="10"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Settings</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Order Attachments</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable or disable the order attachments functionality.</comment>
+                </field>
+                <field id="enable_all_products" translate="label comment" type="select" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable for All Products</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Applies to products whose "Allow Order Attachments" attribute is "Use Config Setting": Yes shows the upload option on them, No hides it. Products set to Yes always show it and products set to No never do.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+            <group id="upload" translate="label" type="text" sortOrder="20"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Upload Settings</label>
+                <field id="allowed_extensions" translate="label comment" type="text" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Allowed File Extensions</label>
+                    <comment>Comma-separated list of allowed file extensions (e.g. pdf,jpg,jpeg,png,gif,doc,docx,zip).</comment>
+                    <validate>required-entry</validate>
+                </field>
+                <field id="max_file_size" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum File Size (MB)</label>
+                    <comment>Maximum allowed file size in megabytes per file.</comment>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="max_files_per_item" translate="label comment" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum Files Per Item</label>
+                    <comment>Maximum number of files a customer can attach per order item. Checked in the browser and on the server.</comment>
+                    <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+            <group id="display" translate="label" type="text" sortOrder="30"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Display Settings</label>
+                <field id="upload_label" translate="label comment" type="text" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Upload Button Label</label>
+                    <comment>Label text shown on the file upload button on the frontend.</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

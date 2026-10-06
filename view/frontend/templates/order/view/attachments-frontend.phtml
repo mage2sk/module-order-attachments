@@ -1,0 +1,102 @@
+<?php
+/**
+ * Order Attachments - Frontend Order View
+ * @var \Panth\OrderAttachments\Block\Order\View\Attachments $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+if (!$block->hasAttachments()) {
+    return;
+}
+$attachments = $block->getAttachments();
+
+$grouped = [];
+foreach ($attachments as $attachment) {
+    $pid = (int) $attachment->getData('product_id');
+    $grouped[$pid][] = $attachment;
+}
+?>
+<style>
+    .order-attachments {
+        --oav-primary: var(--color-primary-fill, #0F766E);
+        --oav-fg: var(--color-fg, #171717);
+        --oav-muted: var(--color-fg-secondary, #525252);
+        --oav-border: #E5E5E5;
+        margin: 2rem 0;
+        font-family: inherit;
+        color: var(--oav-fg);
+    }
+    .order-attachments .oav-title { font-size: 1.375rem; font-weight: 600; line-height: 1.3; margin: 0 0 1rem; color: var(--oav-fg); }
+    .order-attachments .oav-group { background: #FAFAFA; border: 1px solid var(--oav-border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .order-attachments .oav-group-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .order-attachments .oav-icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--oav-primary); }
+    .order-attachments .oav-product { font-size: 14px; font-weight: 600; color: var(--oav-fg); text-decoration: none; }
+    .order-attachments .oav-product:hover { color: var(--oav-primary); text-decoration: underline; }
+    .order-attachments .oav-count { font-size: 13px; color: var(--oav-muted); }
+    .order-attachments .oav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .order-attachments .oav-card { background: #FFFFFF; border: 1px solid var(--oav-border); border-radius: 12px; padding: 10px; min-width: 0; }
+    .order-attachments .oav-thumb { display: block; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+    .order-attachments .oav-thumb img { width: 100%; height: 120px; object-fit: cover; display: block; }
+    .order-attachments .oav-ext { display: flex; align-items: center; justify-content: center; height: 70px; background: #F5F5F5; border-radius: 8px; margin-bottom: 8px; font-size: 20px; font-weight: 700; color: var(--oav-muted); }
+    .order-attachments .oav-name { font-size: 13px; font-weight: 500; color: var(--oav-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .order-attachments .oav-meta { font-size: 12px; color: var(--oav-muted); margin-top: 2px; }
+    .order-attachments .oav-note { font-size: 12px; color: var(--oav-muted); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--oav-border); overflow-wrap: anywhere; }
+    .order-attachments .oav-note strong { font-weight: 600; color: var(--oav-fg); }
+    .order-attachments .oav-download { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--oav-primary); text-decoration: none; }
+    .order-attachments .oav-download:hover { text-decoration: underline; }
+    .order-attachments .oav-download:focus-visible { outline: 2px solid var(--color-primary, #0D9488); outline-offset: 2px; border-radius: 4px; }
+</style>
+<div class="order-attachments">
+    <h2 class="oav-title"><?= $escaper->escapeHtml(__('Order Attachments')) ?></h2>
+
+    <?php foreach ($grouped as $productId => $productAttachments): ?>
+        <?php $count = count($productAttachments); ?>
+        <div class="oav-group">
+            <?php if ($productId): ?>
+                <div class="oav-group-head">
+                    <svg class="oav-icon" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    <a class="oav-product" href="<?= $escaper->escapeUrl($block->getProductUrl($productId)) ?>">
+                        <?= $escaper->escapeHtml($block->getProductName($productId)) ?>
+                    </a>
+                    <span class="oav-count">(<?= $escaper->escapeHtml($count === 1 ? __('%1 file', $count) : __('%1 files', $count)) ?>)</span>
+                </div>
+            <?php endif; ?>
+
+            <div class="oav-grid">
+                <?php foreach ($productAttachments as $attachment): ?>
+                    <?php
+                        $ext = strtolower($attachment->getData('file_extension') ?? '');
+                        $isImage = $block->isImage($ext);
+                        $attachmentId = (int) $attachment->getId();
+                        $filename = $attachment->getData('original_filename');
+                        $note = $attachment->getData('customer_note');
+                        $fileSize = $block->formatFileSize((int) $attachment->getData('file_size'));
+                    ?>
+                    <div class="oav-card">
+                        <?php if ($isImage): ?>
+                            <a class="oav-thumb" href="<?= $escaper->escapeUrl($block->getThumbnailUrl($attachmentId)) ?>" target="_blank" rel="noopener">
+                                <img src="<?= $escaper->escapeUrl($block->getThumbnailUrl($attachmentId)) ?>"
+                                     alt="<?= $escaper->escapeHtmlAttr($filename) ?>"
+                                     loading="lazy" width="160" height="120" />
+                            </a>
+                        <?php else: ?>
+                            <div class="oav-ext" aria-hidden="true"><?= $escaper->escapeHtml(strtoupper($ext)) ?></div>
+                        <?php endif; ?>
+
+                        <div class="oav-name" title="<?= $escaper->escapeHtmlAttr($filename) ?>"><?= $escaper->escapeHtml($filename) ?></div>
+                        <div class="oav-meta"><?= $escaper->escapeHtml(strtoupper($ext)) ?> &middot; <?= $escaper->escapeHtml($fileSize) ?></div>
+
+                        <?php if ($note): ?>
+                            <div class="oav-note"><strong><?= $escaper->escapeHtml(__('Note:')) ?></strong> <?= $escaper->escapeHtml($note) ?></div>
+                        <?php endif; ?>
+
+                        <a class="oav-download" href="<?= $escaper->escapeUrl($block->getDownloadUrl($attachmentId)) ?>"
+                           aria-label="<?= $escaper->escapeHtmlAttr(__('Download %1', $filename)) ?>">
+                            <svg class="oav-icon" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <?= $escaper->escapeHtml(__('Download')) ?>
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endforeach; ?>
+</div>

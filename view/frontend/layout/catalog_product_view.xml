@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Luma: rendered via form.phtml getChildHtml('form_top') -->
+        <referenceBlock name="product.info">
+            <block class="Panth\OrderAttachments\Block\Product\View\Upload"
+                   name="product.order.attachments.upload"
+                   as="form_top"
+                   template="Panth_OrderAttachments::luma/product/view/upload.phtml"
+                   ifconfig="panth_orderattachments/general/enabled"/>
+        </referenceBlock>
+    </body>
+</page>

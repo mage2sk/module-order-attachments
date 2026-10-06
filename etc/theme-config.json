@@ -1,0 +1,16 @@
+{
+  "orderattachments-primary": "#0D9488",
+  "orderattachments-primary-dark": "#0F766E",
+  "orderattachments-primary-light": "#F0FDFA",
+  "orderattachments-bg": "#FFFFFF",
+  "orderattachments-border": "#E5E5E5",
+  "orderattachments-text": "#171717",
+  "orderattachments-text-secondary": "#525252",
+  "orderattachments-text-muted": "#525252",
+  "orderattachments-btn-from": "#0F766E",
+  "orderattachments-btn-to": "#0F766E",
+  "orderattachments-btn-text": "#FFFFFF",
+  "orderattachments-success": "#15803D",
+  "orderattachments-danger": "#DC2626",
+  "orderattachments-warning": "#EAB308"
+}

@@ -1,0 +1,91 @@
+<?php
+/**
+ * Copyright © Panth Infotech. All rights reserved.
+ * Global lightbox for Order Attachment image popups (cart, minicart, order view)
+ * Works on both Luma and Hyva - uses event delegation on document.body
+ *
+ * @var $escaper \Magento\Framework\Escaper
+ */
+?>
+<script>
+(function() {
+    'use strict';
+    var activeOverlay = null;
+    var returnFocus = null;
+
+    function closeLightbox() {
+        if (!activeOverlay) return;
+        if (activeOverlay.parentNode) {
+            activeOverlay.parentNode.removeChild(activeOverlay);
+        }
+        activeOverlay = null;
+        document.body.style.overflow = '';
+        if (returnFocus && typeof returnFocus.focus === 'function') {
+            returnFocus.focus();
+        }
+        returnFocus = null;
+    }
+
+    document.body.addEventListener('click', function(e) {
+        var link = e.target.closest('[data-oa-lightbox]');
+        if (!link) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        var src = link.href || link.style.backgroundImage.replace(/url\(['"]?|['"]?\)/g, '');
+        if (!src) return;
+
+        closeLightbox();
+        returnFocus = link;
+        var label = link.getAttribute('aria-label') || link.getAttribute('title') || link.textContent.trim();
+
+        var overlay = document.createElement('div');
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', label || '<?= $escaper->escapeJs(__('Attachment preview')) ?>');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.9);'
+            + 'display:flex;align-items:center;justify-content:center;cursor:pointer;padding:20px;';
+        overlay.addEventListener('click', closeLightbox);
+
+        var img = document.createElement('img');
+        img.src = src;
+        img.alt = label;
+        img.style.cssText = 'max-width:90vw;max-height:85vh;border-radius:12px;'
+            + 'box-shadow:0 8px 32px rgba(0,0,0,0.5);object-fit:contain;cursor:default;';
+        img.addEventListener('click', function(ev) { ev.stopPropagation(); });
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', '<?= $escaper->escapeJs(__('Close')) ?>');
+        close.innerHTML = '<span aria-hidden="true">&times;</span>';
+        close.style.cssText = 'position:fixed;top:16px;right:16px;color:#fff;font-size:28px;line-height:1;'
+            + 'cursor:pointer;width:44px;height:44px;display:flex;align-items:center;padding:0;'
+            + 'justify-content:center;background:rgba(255,255,255,0.15);border:0;border-radius:50%;'
+            + 'backdrop-filter:blur(4px);transition:background 0.2s;';
+        close.addEventListener('mouseover', function() { this.style.background = 'rgba(255,255,255,0.3)'; });
+        close.addEventListener('mouseout', function() { this.style.background = 'rgba(255,255,255,0.15)'; });
+        close.addEventListener('focus', function() { this.style.outline = '2px solid #fff'; this.style.outlineOffset = '2px'; });
+        close.addEventListener('blur', function() { this.style.outline = ''; });
+        close.addEventListener('click', function(ev) { ev.stopPropagation(); closeLightbox(); });
+
+        overlay.appendChild(img);
+        overlay.appendChild(close);
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+        activeOverlay = overlay;
+        close.focus();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (!activeOverlay) return;
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            e.preventDefault();
+            closeLightbox();
+        } else if (e.key === 'Tab') {
+            e.preventDefault();
+            var btn = activeOverlay.querySelector('button');
+            if (btn) btn.focus();
+        }
+    });
+})();
+</script>

@@ -1,0 +1,99 @@
+<?php
+/**
+ * Copyright (c) Panth Infotech. All rights reserved.
+ * Order Attachments - Admin Order View
+ *
+ * @var $block \Panth\OrderAttachments\Block\Adminhtml\Order\View\Attachments
+ * @var $escaper \Magento\Framework\Escaper
+ */
+
+$attachments = $block->getAttachments();
+$hasAttachments = $block->hasAttachments();
+?>
+<style>
+#order-attachments .oa-order-table { table-layout: auto; width: 100%; }
+#order-attachments .oa-order-table th,
+#order-attachments .oa-order-table td { padding: 1rem; vertical-align: top; }
+#order-attachments .oa-order-table td { overflow-wrap: anywhere; word-break: break-word; }
+#order-attachments .oa-file-name { color: #303030; font-weight: 600; }
+#order-attachments .oa-meta { color: #303030; display: block; margin-top: .4rem; }
+#order-attachments .oa-note { display: block; max-width: 24rem; }
+#order-attachments .oa-empty { color: #303030; margin: 0; padding: 1rem 0; }
+#order-attachments .oa-nowrap { white-space: nowrap; }
+</style>
+<section class="admin__page-section" id="order-attachments">
+    <div class="admin__page-section-title">
+        <span class="title">
+            <?= $escaper->escapeHtml(__('Order Attachments')) ?>
+            <?php if ($hasAttachments): ?>
+                (<?= (int) $attachments->getSize() ?>)
+            <?php endif; ?>
+        </span>
+    </div>
+    <div class="admin__page-section-content">
+        <?php if ($hasAttachments): ?>
+            <div class="admin__table-wrapper">
+                <table class="data-table admin__table-primary oa-order-table">
+                    <thead>
+                        <tr class="headings">
+                            <th><?= $escaper->escapeHtml(__('File')) ?></th>
+                            <th><?= $escaper->escapeHtml(__('Product')) ?></th>
+                            <th><?= $escaper->escapeHtml(__('Uploaded By')) ?></th>
+                            <th><?= $escaper->escapeHtml(__('Note')) ?></th>
+                            <th><?= $escaper->escapeHtml(__('Date')) ?></th>
+                            <th><?= $escaper->escapeHtml(__('Action')) ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($attachments as $attachment): ?>
+                            <?php $type = $attachment->getFileExtension() ?: $attachment->getMimeType(); ?>
+                            <tr>
+                                <td>
+                                    <span class="oa-file-name">
+                                        <?= $escaper->escapeHtml($attachment->getOriginalFilename()) ?>
+                                    </span>
+                                    <span class="oa-meta">
+                                        <?= $escaper->escapeHtml(strtoupper((string) $type)) ?>,
+                                        <?= $escaper->escapeHtml($block->formatFileSize($attachment->getFileSize())) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php $productId = $attachment->getProductId(); ?>
+                                    <?php if ($productId): ?>
+                                        <a href="<?= $escaper->escapeUrl($block->getProductEditUrl($productId)) ?>"
+                                           target="_blank">
+                                            <?= $escaper->escapeHtml($block->getProductName($productId)) ?>
+                                        </a>
+                                    <?php else: ?>
+                                        &mdash;
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= $escaper->escapeHtml($block->getUploadedBy($attachment)) ?></td>
+                                <td>
+                                    <?php if ($attachment->getCustomerNote()): ?>
+                                        <span class="oa-note">
+                                            <?= $escaper->escapeHtml($attachment->getCustomerNote()) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        &mdash;
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= $escaper->escapeHtml($attachment->getCreatedAt()) ?></td>
+                                <td class="oa-nowrap">
+                                    <?php $downloadUrl = $block->getDownloadUrl((int) $attachment->getAttachmentId()); ?>
+                                    <a href="<?= $escaper->escapeUrl($downloadUrl) ?>">
+                                        <?= $escaper->escapeHtml(__('Download')) ?>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <p class="oa-empty">
+                <?= $escaper->escapeHtml(__('No attachments have been uploaded for this order.')) ?>
+            </p>
+        <?php endif; ?>
+    </div>
+</section>

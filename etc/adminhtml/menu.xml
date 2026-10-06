@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Panth_OrderAttachments::group"
+             title="Order Attachments"
+             module="Panth_OrderAttachments"
+             sortOrder="90"
+             parent="Panth_Core::panth_extensions"
+             resource="Panth_OrderAttachments::attachment_view"/>
+        <add id="Panth_OrderAttachments::attachments"
+             title="Manage Attachments"
+             module="Panth_OrderAttachments"
+             sortOrder="10"
+             parent="Panth_OrderAttachments::group"
+             action="panth_orderattachments/attachment/index"
+             resource="Panth_OrderAttachments::attachment_view"/>
+        <add id="Panth_OrderAttachments::settings"
+             title="Configuration"
+             module="Panth_OrderAttachments"
+             sortOrder="20"
+             parent="Panth_OrderAttachments::group"
+             action="adminhtml/system_config/edit/section/panth_orderattachments"
+             resource="Panth_OrderAttachments::config"/>
+    </menu>
+</config>
