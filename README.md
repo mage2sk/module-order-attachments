@@ -186,7 +186,7 @@ The following remain after removal and must be cleaned up by hand if no longer w
 
 ## License
 
-Commercial software license. See [LICENSE.txt](LICENSE.txt) in this repository.
+Free and open source under the MIT License. See [LICENSE.txt](LICENSE.txt).
 
 ## Changelog
 
